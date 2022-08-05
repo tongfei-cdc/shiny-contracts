@@ -1,8 +1,13 @@
 import { HardhatUserConfig } from "hardhat/config";
 import "@nomicfoundation/hardhat-toolbox";
+import "@nomiclabs/hardhat-etherscan";
+import "@cronos-labs/hardhat-cronoscan";
+
 require('dotenv').config();
 
 const PRIVATE_KEY = process.env.PRIVATE_KEY || "";
+const CRONOSCAN_API_KEY = process.env.CRONOSCAN_API_KEY || "";
+
 const config: HardhatUserConfig = {
   solidity: "0.8.9",
   networks: {
@@ -20,6 +25,12 @@ const config: HardhatUserConfig = {
       gasPrice: 5000000000000,
     },
   },
+  etherscan: {
+    apiKey: {
+      cronosTestnet: CRONOSCAN_API_KEY,
+      cronos: CRONOSCAN_API_KEY
+    }
+  }
 };
 
 export default config;
