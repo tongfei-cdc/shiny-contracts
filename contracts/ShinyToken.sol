@@ -8,9 +8,10 @@ contract ShinyToken is ERC20, AccessControl {
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
     bytes32 public constant BURNER_ROLE = keccak256("BURNER_ROLE");
 
-    constructor(uint initialSupply, address minter, address burner) ERC20("Shiny", "SNY") {
-        _setupRole(MINTER_ROLE, minter);
-        _setupRole(BURNER_ROLE, burner);
+    constructor(uint initialSupply) ERC20("Shiny", "SNY") {
+        _setupRole(MINTER_ROLE, msg.sender);
+        _setupRole(BURNER_ROLE, msg.sender);
+        _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
 
         _mint(msg.sender, initialSupply);
     }
