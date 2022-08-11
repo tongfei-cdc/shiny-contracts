@@ -51,7 +51,7 @@ contract ShinyProtocol is ReentrancyGuard, Ownable, IERC721Receiver {
 	}
 
 	function unstake(address nftContract, uint tokenId) public nonReentrant {
-		_claimRewards(msg.sender);
+		_claimRewardsOfItem(msg.sender, nftContract, tokenId);
 		StakedItem[] storage items = stakedItems[msg.sender];
 
 		for (uint i = 0; i < items.length; i++) {

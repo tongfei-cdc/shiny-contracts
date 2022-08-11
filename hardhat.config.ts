@@ -16,7 +16,7 @@ const config: HardhatUserConfig = {
     hardhat: {
       mining: {
         auto: false,
-        interval: [15000, 30000],
+        interval: [4000, 5000],
       },
     },
     cronosTestnet: {

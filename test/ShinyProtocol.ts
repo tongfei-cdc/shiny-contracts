@@ -116,7 +116,19 @@ describe("ShinyProtocol", () => {
         deployFixture
       );
 
+      expect(await nft.connect(addr1).ownerOf(0)).to.eq(addr1.address);
+
       await nft.connect(addr1).setApprovalForAll(shinyProtocol.address, true);
+      await shinyProtocol.connect(addr1).stake(nft.address, 0);
+      expect(await nft.connect(addr1).ownerOf(0)).to.eq(shinyProtocol.address);
+
+      await mine(999);
+      await shinyProtocol.connect(addr1).unstake(nft.address, 0);
+
+      expect(await shinyToken.connect(addr1).balanceOf(addr1.address)).to.eq(
+        ethers.utils.parseEther((1000 * 42).toString())
+      );
+      expect(await nft.connect(addr1).ownerOf(0)).to.eq(addr1.address);
     });
   });
 });
