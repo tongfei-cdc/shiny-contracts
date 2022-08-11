@@ -6,6 +6,8 @@ import "@cronos-labs/hardhat-cronoscan";
 require("dotenv").config();
 
 const PRIVATE_KEY = process.env.PRIVATE_KEY || "";
+const SHINY_ADDR1_KEY = process.env.SHINY_ADDR1_KEY || "";
+const SHINY_ADDR2_KEY = process.env.SHINY_ADDR2_KEY || "";
 const CRONOSCAN_API_KEY = process.env.CRONOSCAN_API_KEY || "";
 
 const config: HardhatUserConfig = {
@@ -20,13 +22,13 @@ const config: HardhatUserConfig = {
     cronosTestnet: {
       url: "https://evm-t3.cronos.org/",
       chainId: 338,
-      accounts: [PRIVATE_KEY],
+      accounts: [PRIVATE_KEY, SHINY_ADDR1_KEY, SHINY_ADDR2_KEY],
       gasPrice: 5000000000000,
     },
     cronos: {
       url: "https://evm.cronos.org/",
       chainId: 25,
-      accounts: [PRIVATE_KEY],
+      accounts: [PRIVATE_KEY, SHINY_ADDR1_KEY, SHINY_ADDR2_KEY],
       gasPrice: 5000000000000,
     },
   },

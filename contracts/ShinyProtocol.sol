@@ -9,6 +9,8 @@ import '@openzeppelin/contracts/access/Ownable.sol';
 import "./ShinyToken.sol";
 
 contract ShinyProtocol is ReentrancyGuard, Ownable, IERC721Receiver {
+	uint public EMISSION_RATE = 42 * 10 ** 18;
+
 	struct StakedItem {
 		uint tokenId;
 		address nftContract;
@@ -36,15 +38,34 @@ contract ShinyProtocol is ReentrancyGuard, Ownable, IERC721Receiver {
 		return stakedItems[account];
 	}
 
-	function claimRewards() public {
+	function claimRewards() public nonReentrant {
 		_claimRewards(msg.sender);
 	}
 
-	function unstake(address nftContract, uint tokenId) public nonReentrant {
-		// _claimRewards(msg.sender);
+	function claimRewardsOfItem(address nftContract, uint tokenId) public nonReentrant {
+		_claimRewardsOfItem(msg.sender, nftContract, tokenId);
 	}
 
-	function _claimRewards(address _addr) internal nonReentrant returns (uint) {
+	function changeEmissionRate(uint newEmissionRate) public onlyOwner {
+		EMISSION_RATE = newEmissionRate;
+	}
+
+	function unstake(address nftContract, uint tokenId) public nonReentrant {
+		_claimRewards(msg.sender);
+		StakedItem[] storage items = stakedItems[msg.sender];
+
+		for (uint i = 0; i < items.length; i++) {
+			if (items[i].tokenId == tokenId && items[i].nftContract == nftContract) {
+				items[i] = items[items.length - 1];
+				items.pop();
+				break;
+			}
+		}
+
+		IERC721(nftContract).safeTransferFrom(address(this), msg.sender, tokenId);
+	}
+
+	function _claimRewards(address _addr) internal returns (uint) {
 		StakedItem[] storage items = stakedItems[_addr];
 		uint rewards = 0;
 
@@ -52,14 +73,40 @@ contract ShinyProtocol is ReentrancyGuard, Ownable, IERC721Receiver {
 			StakedItem storage item = items[i];
 
 			uint elapsedTime = (block.number - item.lastClaimedBlockNum);
-			item.unclaimedRewards = elapsedTime * 42 * 10 ** 18;
+			item.unclaimedRewards = elapsedTime * EMISSION_RATE;
 			rewards += item.unclaimedRewards;
 			item.lastClaimedBlockNum = block.number;
 			item.unclaimedRewards = 0;
 		}
 
-		shinyToken.mint(_addr, rewards);
+		if (rewards > 0) {
+			shinyToken.mint(_addr, rewards);
+		}
 
+		return rewards;
+	}
+
+	function _claimRewardsOfItem(address _addr, address nftContract, uint tokenId) internal returns (uint) {
+		StakedItem[] storage items = stakedItems[_addr];
+		uint rewards = 0;
+
+		for (uint i = 0; i < items.length; i++) {
+			if (items[i].nftContract == nftContract && items[i].tokenId == tokenId) {
+				StakedItem storage item = items[i];
+
+				uint elapsedTime = (block.number - item.lastClaimedBlockNum);
+				item.unclaimedRewards = elapsedTime * 42 * 10 ** 18;
+				item.lastClaimedBlockNum = block.number;
+				rewards = item.unclaimedRewards;
+				item.unclaimedRewards = 0;
+
+				break;
+			}
+		}
+
+		if (rewards > 0) {
+			shinyToken.mint(_addr, rewards);
+		}
 		return rewards;
 	}
 

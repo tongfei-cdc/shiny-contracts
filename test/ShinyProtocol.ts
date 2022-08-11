@@ -7,9 +7,7 @@ describe("ShinyProtocol", () => {
     const [owner, addr1, addr2] = await ethers.getSigners();
     const ShinyToken = await ethers.getContractFactory("ShinyToken");
     const shinyToken = await ShinyToken.deploy(
-      ethers.utils.parseEther("10000"),
-      owner.address,
-      owner.address
+      ethers.utils.parseEther("10000")
     );
 
     await shinyToken.deployed();
@@ -67,9 +65,58 @@ describe("ShinyProtocol", () => {
       expect(await shinyToken.connect(addr1).balanceOf(addr1.address)).to.eq(
         ethers.utils.parseEther((1000 * 42).toString())
       );
-      // expect(await shinyToken.connect(addr1).balanceOf(addr1.address)).to.eq(
-      //   ethers.BigNumber.from(1000 * 42 * 10 ** 18)
-      // );
+    });
+  });
+
+  describe("#claimRewardsOfItem", () => {
+    it("should receive unclaimed rewards of an specific staked item", async () => {
+      const [owner, addr1] = await ethers.getSigners();
+      const { shinyProtocol, shinyToken, nft } = await loadFixture(
+        deployFixture
+      );
+
+      await nft.connect(addr1).setApprovalForAll(shinyProtocol.address, true);
+      await shinyProtocol.connect(addr1).stake(nft.address, 0);
+      await mine(999);
+      await shinyProtocol.connect(addr1).claimRewardsOfItem(nft.address, 0);
+      expect(await shinyToken.connect(addr1).balanceOf(addr1.address)).to.eq(
+        ethers.utils.parseEther((1000 * 42).toString())
+      );
+    });
+  });
+
+  describe("#changeEmissionRate", () => {
+    it("should update emission rate", async () => {
+      const [owner, addr1, addr2] = await ethers.getSigners();
+      const { shinyProtocol, shinyToken, nft } = await loadFixture(
+        deployFixture
+      );
+
+      await nft.connect(addr1).setApprovalForAll(shinyProtocol.address, true);
+      await shinyProtocol
+        .connect(owner)
+        .changeEmissionRate(ethers.utils.parseEther("1"));
+      expect(await shinyProtocol.connect(owner).EMISSION_RATE()).to.eq(
+        ethers.utils.parseEther("1")
+      );
+      await shinyProtocol.connect(addr1).stake(nft.address, 0);
+      await mine(999);
+
+      await shinyProtocol.connect(addr1).claimRewards();
+      expect(await shinyToken.connect(addr1).balanceOf(addr1.address)).to.eq(
+        ethers.utils.parseEther((1000).toString())
+      );
+    });
+  });
+
+  describe("#unstake", () => {
+    it("should unstake and claim all the rewards", async () => {
+      const [owner, addr1] = await ethers.getSigners();
+      const { shinyProtocol, shinyToken, nft } = await loadFixture(
+        deployFixture
+      );
+
+      await nft.connect(addr1).setApprovalForAll(shinyProtocol.address, true);
     });
   });
 });
