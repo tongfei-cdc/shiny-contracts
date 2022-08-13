@@ -15,16 +15,25 @@ async function main() {
   );
   await nft.deployed();
 
-  // console.log("minting nfts for owner and two other account");
-  // await (await nft.connect(owner).mintNFT(owner.address)).wait();
-  // await (await nft.connect(owner).mintNFT(owner.address)).wait();
-  // await (await nft.connect(owner).mintNFT(owner.address)).wait();
-  // await (await nft.connect(owner).mintNFT(owner.address)).wait();
-  // await (await nft.connect(owner).mintNFT(owner.address)).wait();
-  // await (await nft.connect(owner).mintNFT(owner.address)).wait();
+  console.log("minting nfts for owner and two other account");
+  await nft.connect(owner).mintNFT(owner.address);
+  await nft.connect(owner).mintNFT(owner.address);
+  await nft.connect(owner).mintNFT(owner.address);
+  await nft.connect(owner).mintNFT(owner.address);
+  await nft.connect(owner).mintNFT(addr1.address);
+  await nft.connect(owner).mintNFT(addr1.address);
+
+  console.log("minting shiny tokens for accounts");
+  await shinyToken
+    .connect(owner)
+    .mint(addr1.address, ethers.utils.parseEther("100"));
+
+  await shinyToken
+    .connect(owner)
+    .mint(addr2.address, ethers.utils.parseEther("100"));
 
   console.log("deploying shiny protocol contract...");
-  const ShinyProtocol = await ethers.getContractFactory("ShinyProtocol");
+  const ShinyProtocol = await ethers.getContractFactory("ShinyProtocolV2");
   const shinyProtocol = await ShinyProtocol.deploy(shinyToken.address);
   await shinyProtocol.deployed();
 
