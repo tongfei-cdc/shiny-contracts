@@ -14,12 +14,12 @@ contract ShinyProtocolV2 is ReentrancyGuard, Ownable, IERC721Receiver {
 	using SafeMath for uint;
 
 	uint public EMISSION_RATE = 42 * 10 ** 18;
-	uint totalStakedNFTsCount = 0;
-	uint totalStakedShinyAmount = 0;
+	uint public totalStakedNFTsCount = 0;
+	uint public totalStakedShinyAmount = 0;
 
 	mapping(address => uint) userStakedShinyAmount;
 	mapping(address => StakedItem[]) stakedItems;
-	mapping(address => UserRewards) userRewards;
+	mapping(address => uint) userLastClaimedBlockNum;
 
 	ShinyToken shinyToken;
 
@@ -27,11 +27,6 @@ contract ShinyProtocolV2 is ReentrancyGuard, Ownable, IERC721Receiver {
 		uint tokenId;
 		address nftContract;
 		address owner;
-	}
-
-	struct UserRewards {
-		uint lastClaimedBlockNum;
-		uint unclaimedRewards;
 	}
 
 	constructor(address shinyAddress) {
@@ -52,7 +47,7 @@ contract ShinyProtocolV2 is ReentrancyGuard, Ownable, IERC721Receiver {
 		stakedItems[msg.sender].push(item);
 
 		totalStakedNFTsCount += 1;
-		userRewards[msg.sender] = UserRewards(block.number, 0);
+		userLastClaimedBlockNum[msg.sender] = block.number;
 
 		IERC721(nftContract).safeTransferFrom(msg.sender, address(this), tokenId);
 	}
@@ -99,18 +94,22 @@ contract ShinyProtocolV2 is ReentrancyGuard, Ownable, IERC721Receiver {
 		return userStakedShinyAmount[_addr];
 	}
 
+	function getUserLastClaimedBlockNum(address _addr) public view returns (uint) {
+		return userLastClaimedBlockNum[_addr];
+	}
+
 	function _claimRewards(address _addr) private returns (uint) {
 		uint rewards = (stakedItems[_addr].length)
 			.mul(userStakedShinyAmount[msg.sender])
 			.mul(EMISSION_RATE)
-			.mul(block.number - userRewards[msg.sender].lastClaimedBlockNum)
+			.mul(block.number - userLastClaimedBlockNum[msg.sender])
 			.div(totalStakedNFTsCount.mul(totalStakedShinyAmount));
 
 		if (rewards > 0) {
 			shinyToken.mint(_addr, rewards);
 		}
 
-		userRewards[msg.sender].lastClaimedBlockNum = block.number;
+		userLastClaimedBlockNum[msg.sender] = block.number;
 
 		return rewards;
 	}
