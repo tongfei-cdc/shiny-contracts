@@ -29,6 +29,14 @@ contract ShinyProtocolV2 is ReentrancyGuard, Ownable, IERC721Receiver {
 		address owner;
 	}
 
+	event ShinyStaked(address _addr, uint _amount);
+	event NFTStaked(address _addr, address _nftContract, uint _tokenId);
+	event RewardsClaimed(address _addr, address _amount, uint _blockNum);
+	event EmissionRateChanged(address _addr, uint _newEmissionRate);
+	event NFTUnstaked(address _addr, address _nftContract, uint _tokenId);
+	event ShinyUnstaked(address _addr, uint _amount);
+	event ERC721Received(address _operator, address _from, uint _tokenId);
+
 	constructor(address shinyAddress) {
 		shinyToken = ShinyToken(shinyAddress);
 	}
@@ -38,6 +46,8 @@ contract ShinyProtocolV2 is ReentrancyGuard, Ownable, IERC721Receiver {
 		totalStakedShinyAmount += _amount;
 
 		IERC20(shinyToken).transferFrom(msg.sender, address(this), _amount);
+
+		emit ShinyStaked(msg.sender, _amount);
 	}
 
 	function stakeNFT(address nftContract, uint tokenId) public nonReentrant {
@@ -50,6 +60,8 @@ contract ShinyProtocolV2 is ReentrancyGuard, Ownable, IERC721Receiver {
 		userLastClaimedBlockNum[msg.sender] = block.number;
 
 		IERC721(nftContract).safeTransferFrom(msg.sender, address(this), tokenId);
+
+		emit NFTStaked(msg.sender, nftContract, tokenId);
 	}
 
 	function claimRewards() public nonReentrant {
@@ -58,6 +70,8 @@ contract ShinyProtocolV2 is ReentrancyGuard, Ownable, IERC721Receiver {
 
 	function changeEmissionRate(uint newEmissionRate) public onlyOwner {
 		EMISSION_RATE = newEmissionRate;
+
+		emit EmissionRateChanged(msg.sender, newEmissionRate);
 	}
 
 	function unstakeNFT(address nftContract, uint tokenId) public nonReentrant {
@@ -74,6 +88,8 @@ contract ShinyProtocolV2 is ReentrancyGuard, Ownable, IERC721Receiver {
 		}
 
 		IERC721(nftContract).safeTransferFrom(address(this), msg.sender, tokenId);
+
+		emit NFTUnstaked(msg.sender, nftContract, tokenId);
 	}
 
 	function unstakeShiny(uint _amount) public nonReentrant {
@@ -88,6 +104,8 @@ contract ShinyProtocolV2 is ReentrancyGuard, Ownable, IERC721Receiver {
 
 		IERC20(shinyToken).approve(address(this), _amount);
 		IERC20(shinyToken).transferFrom(address(this), msg.sender, _amount);
+
+		emit ShinyUnstaked(msg.sender, _amount);
 	}
 
 	function getUserStakedShinyAmount(address _addr) public view returns (uint) {
@@ -118,7 +136,8 @@ contract ShinyProtocolV2 is ReentrancyGuard, Ownable, IERC721Receiver {
 		return stakedItems[account];
 	}
 
-	function onERC721Received(address, address, uint256, bytes memory) public virtual override returns (bytes4) {
+	function onERC721Received(address _operator, address _from, uint256 _tokenId, bytes memory data) public virtual override returns (bytes4) {
+		emit ERC721Received(_operator, _from, _tokenId);
 		return this.onERC721Received.selector;
 	}
 }
