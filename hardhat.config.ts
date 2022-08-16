@@ -13,12 +13,12 @@ const CRONOSCAN_API_KEY = process.env.CRONOSCAN_API_KEY || "";
 const config: HardhatUserConfig = {
   solidity: "0.8.9",
   networks: {
-    hardhat: {
-      mining: {
-        auto: false,
-        interval: [4000, 5000],
-      },
-    },
+    // hardhat: {
+    //   mining: {
+    //     auto: false,
+    //     interval: [4000, 5000],
+    //   },
+    // },
     cronosTestnet: {
       url: "https://evm-t3.cronos.org/",
       chainId: 338,
